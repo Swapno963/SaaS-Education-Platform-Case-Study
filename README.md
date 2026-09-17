@@ -1,18 +1,33 @@
-# School Management SaaS
+# School Management SaaS — case study
 
-Multi-branch education platform: Go/Gin, PostgreSQL, Redis/Asynq, RBAC, outbox pattern. Production on Docker, AWS EC2, Terraform, ECR, GitHub Actions, with PostgreSQL backups to S3.
+Multi-branch school operations platform. This repo is the public architecture and operations record. Application source is private.
 
-Application source is private. This repository documents architecture, CI/CD, and infrastructure.
-
-**One-pager:** [school-management-saas.pdf](docs/school-management-saas.pdf)
+**Status:** production (client product at Meraki). Observability beyond health checks is not shipped.
 
 ---
 
-## What it is
+## What it does
 
-An education institution management system for day-to-day operations of multi-branch schools: students, branches, classes, assessments, fees, notifications, and staff workflows.
+Day-to-day operations for multi-branch schools: students, classes, assessments, fees, notifications, and staff workflows.
 
-The request path stays in the **Go / Gin REST API**. Notifications, email, and SMS run through **Redis and Asynq**. An **outbox pattern** keeps those side effects aligned with database writes. **Role-based access control** sits in the API.
+The request path stays in a **Go / Gin REST API** on **PostgreSQL**. Email, SMS, and notifications run through **Redis and Asynq**. An **outbox pattern** keeps those side effects aligned with database writes. **Role-based access control** sits in the API.
+
+---
+
+## What I built
+
+- Go/Gin APIs, PostgreSQL schema, and query work
+- Authentication and authorization middleware (RBAC)
+- Redis/Asynq workers and outbox-backed side effects
+- Docker packaging of backend services
+- Terraform for VPC, subnets, security groups, and EC2
+- GitHub Actions: format, vet, lint, tests, vulnerability scan, image publish to ECR
+- Production deploy and health checks
+- Daily PostgreSQL dumps to versioned S3, with a documented restore path
+
+A live demo exists for role walkthroughs. Credentials are not stored in this repository.
+
+**One-pager:** [school-management-saas.pdf](docs/school-management-saas.pdf)
 
 ---
 
@@ -30,7 +45,7 @@ The request path stays in the **Go / Gin REST API**. Notifications, email, and S
 | Infra | AWS, Terraform | VPC, subnets, security groups, EC2 |
 | CI/CD | GitHub Actions, ECR | Test, scan, build, publish |
 
-Monitoring with Prometheus + Grafana, Loki, and OpenTelemetry is **planned, not shipped**.
+**Not shipped:** Prometheus, Grafana, Loki, OpenTelemetry.
 
 ---
 
@@ -52,19 +67,6 @@ Monitoring with Prometheus + Grafana, Loki, and OpenTelemetry is **planned, not 
                               Asynq
                                Worker
 ```
-
----
-
-## What I owned
-
-- Go/Gin APIs, PostgreSQL schema, and query work
-- Authentication and authorization middleware (RBAC)
-- Redis/Asynq background processing and outbox-backed side effects
-- Docker packaging of backend services
-- Terraform for VPC, subnets, security groups, and EC2
-- GitHub Actions: format, vet, lint, tests, vulnerability scan, image publish to ECR
-- Production deploy and health checks
-- Daily PostgreSQL dumps to versioned S3, with a documented restore path
 
 ---
 
