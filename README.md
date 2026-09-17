@@ -1,40 +1,36 @@
-# SaaS Education Platform Infrastructure
+# School Management SaaS
 
+Multi-branch education platform: Go/Gin, PostgreSQL, Redis/Asynq, RBAC, outbox pattern. Production on Docker, AWS EC2, Terraform, ECR, GitHub Actions, with PostgreSQL backups to S3.
 
+Application source is private. This repository documents architecture, CI/CD, and infrastructure.
 
-## Overview
-An education institution management system designed to streamline the day-to-day operations of multi branch schools and educational institutions. The platform provides features for managing students, branches, classes, assessments, fees, notifications, and other administrative workflows.
+**One-pager:** [school-management-saas.pdf](docs/school-management-saas.pdf)
 
+---
 
-### Application Stack
+## What it is
 
-* Backend: Go
-* Frontend: Next.js
-* Database: PostgreSQL (self-hosted on EC2)
-* Containerization: Docker
-* Infrastructure: Terraform
-* Cloud Provider: AWS
-* CI/CD: GitHub Actions
-* Monitoring: Prometheus + Grafana (Upcoming)
-* Logging: Loki (Upcoming)
-* Tracing: OpenTelemetry (Upcoming)
+An education institution management system for day-to-day operations of multi-branch schools: students, branches, classes, assessments, fees, notifications, and staff workflows.
 
+The request path stays in the **Go / Gin REST API**. Notifications, email, and SMS run through **Redis and Asynq**. An **outbox pattern** keeps those side effects aligned with database writes. **Role-based access control** sits in the API.
 
+---
 
+## Stack
 
-### My Contribution
+| Layer | Choice | Notes |
+| --- | --- | --- |
+| Backend | Go, Gin | REST API, authz, workers |
+| Frontend | Next.js | Admin and student UI |
+| Data | PostgreSQL | Self-hosted on EC2 |
+| Jobs | Redis, Asynq | Email, SMS, notifications |
+| Files | S3 / MinIO | Uploads and DB dumps |
+| Edge | Nginx | Reverse proxy |
+| Runtime | Docker Compose on EC2 | Frontend, API, workers |
+| Infra | AWS, Terraform | VPC, subnets, security groups, EC2 |
+| CI/CD | GitHub Actions, ECR | Test, scan, build, publish |
 
-* Designed and implemented backend APIs using Go and Gin
-* Designed PostgreSQL schemas and optimized database queries
-* Implemented authentication and authorization middleware
-* Built asynchronous background processing using Redis and Asynq
-* Containerized backend services with Docker
-* Provisioned AWS infrastructure using Terraform
-* Configured VPC, subnets, security groups and EC2
-* Built CI/CD pipelines with GitHub Actions
-* Published Docker images to AWS ECR
-* Implemented automated testing, linting, vulnerability scanning and deployment
-* Implemented production deployment and health-check mechanisms
+Monitoring with Prometheus + Grafana, Loki, and OpenTelemetry is **planned, not shipped**.
 
 ---
 
@@ -55,14 +51,24 @@ An education institution management system designed to streamline the day-to-day
                                  |
                               Asynq
                                Worker
-                                 |
-                              Jobs
 ```
 
 ---
 
-## CI/CD Pipeline
+## What I owned
 
+- Go/Gin APIs, PostgreSQL schema, and query work
+- Authentication and authorization middleware (RBAC)
+- Redis/Asynq background processing and outbox-backed side effects
+- Docker packaging of backend services
+- Terraform for VPC, subnets, security groups, and EC2
+- GitHub Actions: format, vet, lint, tests, vulnerability scan, image publish to ECR
+- Production deploy and health checks
+- Daily PostgreSQL dumps to versioned S3, with a documented restore path
+
+---
+
+## CI/CD
 
 ```text
 Developer Push
@@ -70,122 +76,30 @@ Developer Push
       ▼
 GitHub Repository
       │
-      ├─────────────────────────────────────────────┐
-      │                                             │
-      ▼                                             ▼
-Non-Main Branch                              Main Branch
-      │                                             │
-      ▼                                             ▼
-GitHub Actions                                GitHub Actions
-      │                                             │
-      ├── Format                                  ├── Format
-      ├── Vet                                     ├── Vet
-      ├── Lint                                    ├── Lint
-      ├── Tests                                   ├── Tests
-      ├── Build                                   ├── Build
-      └── Test Environment                        ├── Security Scan
-                                                  ├── Docker Build
-                                                  └── Publish Image
-                                                         │
-                                                         ▼
-                                                    AWS ECR
-                                                         │
-                                                   SHA-based Tag
-                                                         │
-                                                         ▼
-                                               ┌─────────────────┐
-                                               │ Manual Deploy   │
-                                               │ Run Workflow    │
-                                               └────────┬────────┘
-                                                        │
-                                  ┌─────────────────────┴─────────────────────┐
-                                  │                                           │
-                                  ▼                                           ▼
-                         Frontend Image Tag                           Backend Image Tag
-                                  │                                           │
-                                  └─────────────────────┬─────────────────────┘
-                                                        ▼
-                                                     AWS EC2
-                                                        │
-                                                        ▼
-                                               Docker Compose
-                                                        │
-                                  ┌─────────────────────┼─────────────────────┐
-                                  ▼                     ▼                     ▼
-                              Frontend                API                  Workers
+      ├──────── non-main ─────────┐
+      │                           │
+      ▼                           ▼
+  Format, vet, lint,          Format, vet, lint,
+  tests, build                tests, build
+  test environment            security scan
+                              Docker build
+                              Publish to ECR (SHA tag)
+                                      │
+                              Manual deploy workflow
+                                      │
+                                      ▼
+                              EC2 / Docker Compose
+                              Frontend · API · Workers
 ```
 
-
-
-
-
-
 ---
 
-## Database
+## Operations
 
-### PostgreSQL (Self-Hosted on EC2)
+**Database.** PostgreSQL runs in Docker on EC2 with a persistent volume, internal-network access only, scheduled `pg_dump` jobs, and a manual restore procedure.
 
-* Persistent Docker volume storage
-* Automated backups via cron jobs
-* Manual restore procedures
-* Internal network access only
+**Secrets.** GitHub Actions secrets plus EC2 environment files. IAM is least-privilege, with separate roles for CI/CD and infrastructure.
 
+**Containers.** Non-root, minimal base images, image vulnerability scanning.
 
-
-## Security
-
-### Secrets Management
-
-Managed using:
-
-* GitHub Actions Secrets
-* EC2 environment variables (.env files)
-
-
-### Container Security
-
-* Non-root containers
-* Minimal base images
-* Image vulnerability scanning
-
-### IAM
-
-* Least privilege access
-* Separate roles for CI/CD and infrastructure
-* Environment isolation via Terraform
-
----
-
-## Disaster Recovery
-
-### Backup Strategy
-
-Database:
-
-* Daily PostgreSQL dumps via cron job
-* Manual restore procedures documented
-
-Storage:
-
-* Versioned S3 buckets 
-
-
-
-
-## Live Demo
-
-A live demo environment is available to showcase the system and demonstrate different user roles.
-
-**Live Demo:** [`54.179.197.223`]
-
-### Demo Accounts
-
-| Role         | Description                       |                 Email                  | Password   |
-| ------------ | --------------------------------- | -------------------------------------- | ---------- |
-| Branch Admin | Manages a specific branch         | `demo.branch.admin@shaplamodel.edu.bd` | `12345678` |
-| Teacher      | Accesses teacher-related features | `demo.teacher001@shaplamodel.edu.bd`   | `12345678` |
-| Student      | Accesses student-related features | `demo.c6.student01@shaplamodel.edu.bd` | `12345678` |
-
-> These accounts are provided for demonstration purposes only. Please do not modify or delete shared demo data.
-
+More detail: [infra.md](infra.md) and [Docs/architecture-decisions](Docs/architecture-decisions).
