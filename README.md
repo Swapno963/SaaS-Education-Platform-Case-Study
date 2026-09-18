@@ -18,17 +18,17 @@ The request path stays in the **Go / Gin REST API**. Notifications, email, and S
 
 ## Stack
 
-| Layer | Choice | Notes |
-| --- | --- | --- |
-| Backend | Go, Gin | REST API, authz, workers |
-| Frontend | Next.js | Admin and student UI |
-| Data | PostgreSQL | Self-hosted on EC2 |
-| Jobs | Redis, Asynq | Email, SMS, notifications |
-| Files | S3 / MinIO | Uploads and DB dumps |
-| Edge | Nginx | Reverse proxy |
-| Runtime | Docker Compose on EC2 | Frontend, API, workers |
-| Infra | AWS, Terraform | VPC, subnets, security groups, EC2 |
-| CI/CD | GitHub Actions, ECR | Test, scan, build, publish |
+| Layer    | Choice                | Notes                              |
+| -------- | --------------------- | ---------------------------------- |
+| Backend  | Go, Gin               | REST API, authz, workers           |
+| Frontend | Next.js               | Admin and student UI               |
+| Data     | PostgreSQL            | Self-hosted on EC2                 |
+| Jobs     | Redis, Asynq          | Email, SMS, notifications          |
+| Files    | S3 / MinIO            | Uploads and DB dumps               |
+| Edge     | Nginx                 | Reverse proxy                      |
+| Runtime  | Docker Compose on EC2 | Frontend, API, workers             |
+| Infra    | AWS, Terraform        | VPC, subnets, security groups, EC2 |
+| CI/CD    | GitHub Actions, ECR   | Test, scan, build, publish         |
 
 Monitoring with Prometheus + Grafana, Loki, and OpenTelemetry is **planned, not shipped**.
 
